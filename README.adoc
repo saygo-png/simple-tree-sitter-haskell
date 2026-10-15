@@ -1,0 +1,44 @@
+= simple-tree-sitter-haskell
+
+This is based on the parser and queries from https://github.com/tree-sitter/tree-sitter-haskell and https://github.com/nvim-treesitter/nvim-treesitter
+
+== Issues with upstream
+Upstream queries try to guess things which they can't know. For example its impossible to know whether something is a function or not in Haskell just by signature. You can easily write type aliases to drop `->` in signatures. They hardcode higher order functions such as `$` or `.` to highlight their arguments as functions.
+
+Upstream hardcodes functions from base as keywords which is entirely wrong, they are functions. Many people don't even use the base library and instead use alternatives. This also leads to things such as `handle` used as an argument being highlighted like a keyword.
+
+The upstream highlights.scm file is over 400 lines! It is a complex patchwork of nonsense leading to https://github.com/neovim/neovim/issues/34634[highlighting that depends on your cursor position], mismatching signature and binding highlights. Things are variables, functions and then variables at the same time.
+
+== Goal
+
+Be far more principled. No hardcoding of libraries or complex heuristics. If we can't know something from the parser then we leave it up to semantic tokens from the language server. Highlighting that is consistent helps understands the syntax of code at a glance. I find that upstream highlighting often makes code harder to read for me due to its inconsistency.
+
+== Usage
+
+=== Non Nix
+
+This repo doesn't build the Haskell parser without Nix, so you have to fetch that yourself in some way.
+The parser commit hash is pinned in the flake.lock file. Queries are written for specific parser versions +
+but since these queries are so simple, I think the change of parser version mismatches causing problems are low.
+
+You can copy over the `queries` dir directly to your runtimepath and that should work.
+
+I'm sure you could use some plugin manager to automate this, but I don't know them.
+
+=== Nix
+
+The `default` package exposed from the flake outputs a valid Neovim plugin with this structure:
+
+```
+result -> /nix/store/y8d9vy9gr5z2jblgadn6ayz86ykkg0wq-vimplugin-simple-tree-sitter-haskell-nvim
+├── parser
+│   └── haskell.so
+└── queries
+    └── haskell
+        ├── folds.scm
+        ├── highlights.scm
+        ├── injections.scm
+        └── locals.scm
+```
+
+So add the flake as an input and use whatever plugin management solution you use to install the `default` output as a plugin.
