@@ -42,3 +42,10 @@ result -> /nix/store/y8d9vy9gr5z2jblgadn6ayz86ykkg0wq-vimplugin-simple-tree-sitt
 ```
 
 So add the flake as an input and use whatever plugin management solution you use to install the `default` output as a plugin.
+
+To build it from the nixpkgs your config already uses, instead of evaluating a second one,
+use `lib.mkGrammar pkgs` (or `lib.mkParser pkgs` for the bare parser), e.g. in Nixvim:
+
+```nix
+plugins.treesitter.grammarPackages = [ (inputs.simple-tree-sitter-haskell.lib.mkGrammar pkgs) ];
+```
